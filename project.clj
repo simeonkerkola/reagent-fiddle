@@ -17,7 +17,10 @@
                   :scope "provided"]
                  [secretary "1.2.3"]
                  [venantius/accountant "0.2.4"
-                  :exclusions [org.clojure/tools.reader]]]
+                  :exclusions [org.clojure/tools.reader]]
+                 [cljsjs/react-motion "0.5.2-0"]
+                 [deraen/lein-sass4clj "0.3.1"]]
+
 
   :plugins [[lein-environ "1.1.0"]
             [lein-cljsbuild "1.1.7"]
@@ -41,7 +44,7 @@
 
   :minify-assets
   {:assets
-   {"resources/public/css/site.min.css" "resources/public/css/site.css"}}
+   {"resources/public/css/site.min.css" "resources/public/css/styles.css"}}
 
   :cljsbuild
   {:builds {:min
@@ -63,21 +66,33 @@
               :source-map true
               :optimizations :none
               :pretty-print  true}}
+            :test
+            {:source-paths ["src/cljs" "src/cljc" "test/cljs"]
+             :compiler {:main reagent-fiddle.doo-runner
+                        :asset-path "/js/out"
+                        :output-to "target/test.js"
+                        :output-dir "target/cljstest/public/js/out"
+                        :optimizations :whitespace
+                        :pretty-print true}}}}
 
 
+  :doo {:build "test"
+        :alias {:default [:chrome]}}
 
-            }
-   }
 
   :figwheel
   {:http-server-root "public"
    :server-port 3449
    :nrepl-port 7002
-   :nrepl-middleware ["cemerick.piggieback/wrap-cljs-repl"
-                      ]
+   :nrepl-middleware ["cemerick.piggieback/wrap-cljs-repl"]
+
    :css-dirs ["resources/public/css"]
    :ring-handler reagent-fiddle.handler/app}
 
+  :sass {:source-paths ["src/scss"]
+           :target-path "resources/public/css"
+           ; optional, valid values: :nested :compact :expanded :compressed
+           :output-style :nested}
 
 
   :profiles {:dev {:repl-options {:init-ns reagent-fiddle.repl
@@ -91,12 +106,18 @@
                                   [org.clojure/tools.nrepl "0.2.13"]
                                   [com.cemerick/piggieback "0.2.2"]
                                   [pjstadig/humane-test-output "0.8.3"]
-                                  
- ]
+                                  ;; To silence warnings from sass4clj dependecies about missing logger implementation
+                                  [org.slf4j/slf4j-nop "1.7.25"]]
+
+
+
+
 
                    :source-paths ["env/dev/clj"]
                    :plugins [[lein-figwheel "0.5.16"]
-]
+                             [lein-doo "0.1.10"]
+                             [deraen/lein-sass4clj "0.3.1"]]
+
 
                    :injections [(require 'pjstadig.humane-test-output)
                                 (pjstadig.humane-test-output/activate!)]
