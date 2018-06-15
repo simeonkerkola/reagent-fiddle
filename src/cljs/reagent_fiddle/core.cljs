@@ -10,8 +10,25 @@
 (def toggled? (r/atom false))
 
 (defn green-button [txt]
-  (fn [txt]
-    [:button txt]))
+  (let [state (r/atom 0)]
+    (fn [txt]
+      [:button.button-green {:on-click #(swap! state inc)}
+       (str txt " " @state
+        (println @state @toggled?))])))
+
+(defn complex-component [a b c]
+  (let [state (r/atom {})]
+    (r/create-class
+      {:component-did-mount
+       (fn [] (println "I mounted"))
+
+       ;; name your component for inclusion in error messages
+       :display-name "complex-component"
+
+       :reagent-render
+       (fn [a b c]
+         [:div {:class c}
+          [:i a ] " " b])})))
 ;; -------------------------
 ;; Views
 
@@ -20,7 +37,8 @@
 (defn home-page []
   [:div
    [:h2 "Welcome"]
-   [green-button "moi"]
+   [green-button "click"]
+   [complex-component "tämä" "on" "komponentti"]
 
    [:div [:a {:href "/about"} "go to about page"]]])
    ; [:div
