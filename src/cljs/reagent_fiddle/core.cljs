@@ -1,58 +1,60 @@
 (ns reagent-fiddle.core
-    (:require [reagent.core :as r :refer [atom]]
-              [secretary.core :as secretary :include-macros true]
-              [accountant.core :as accountant]
-              [cljsjs.react-motion]))
+  (:require [reagent.core :as r :refer [atom]]
+            [secretary.core :as secretary :include-macros true]
+            [accountant.core :as accountant]
+            [cljsjs.react-motion]))
 
-(def Motion js/ReactMotion.Motion)
-(def spring js/ReactMotion.spring)
+(def state (r/atom {:columns [{:title "Todos"
+                               :cards [{:title "Learn about Reagent"}
+                                       {:title "Go to sleep"}]
+                               :editing true}
+                              {:title "Fixes"
+                               :cards [{:title "Fix dinner"}
+                                       {:title "The Bike"
+                                        :editing true}]}]}))
 
-(def toggled? (r/atom false))
+(defn card [card]
+   (if (:editing card)
+    ; If editing, show input field
+    [:div.card.editing [:input {:type "text" :value (:title card)}]]
+    [:div.card (:title card)]))
 
-(defn green-button [txt]
-  (let [state (r/atom 0)]
-    (fn [txt]
-      [:button.button-green {:on-click #(swap! state inc)}
-       (str txt " " @state
-        (println @state @toggled?))])))
+(defn new-card []
+  [:div.new-card
+   "+ a new card"])
 
-(defn complex-component [a b c]
-  (let [state (r/atom {})]
-    (r/create-class
-      {:component-did-mount
-       (fn [] (println "I mounted"))
+(defn column [{:keys [title cards editing]}]
+  [:div.column
+   (if editing
+     ; If editing, show input field
+     [:input {:type "text" :value title}]
+     [:h2 title])
 
-       ;; name your component for inclusion in error messages
-       :display-name "complex-component"
+   ; Get each individual card
+   (for [c cards]
+     ^{:key c} [card c])
+   [new-card]])
 
-       :reagent-render
-       (fn [a b c]
-         [:div {:class c}
-          [:i a ] " " b])})))
+(defn new-column []
+  [:div.new-column
+   "+ new column"])
+
+(defn board [state]
+  [:div.board
+
+   ; Loop thru columns from the state, and make a component for each
+   (for [c (:columns @state)]
+     ^{:key c} [column c])
+   [new-column]])
+
 ;; -------------------------
 ;; Views
 
 
-
 (defn home-page []
   [:div
-   [:h2 "Welcome"]
-   [green-button "click"]
-   [complex-component "tämä" "on" "komponentti"]
-
+   [board state]
    [:div [:a {:href "/about"} "go to about page"]]])
-   ; [:div
-   ;  [:button {:on-mouse-down #(swap! toggled? not)} "Toggle"]
-   ;  ; Smiley bird :> Motion is same as using (r/adapt-react-class Motion)
-   ;  [:> Motion {:style #js {:x (spring (if @toggled? 400 0))}} ; #js == js reader tag
-   ;   (fn [style]
-   ;     (let [x (.-x style)] ; style is js-object, so easiest way to get the x property out is .-x
-   ;       (r/as-element ; Turn hiccup into a plain React element, which the Motion will then render
-   ;         [:div.slider
-   ;          [:div.slider-block
-   ;           {:style {:transform (str "translate3d(" x "px, 0, 0)")}}]])))]]])
-
-
 
 (defn about-page []
   [:div [:h2 "About reagent-fiddle"]
@@ -67,10 +69,10 @@
   [:div [@page]])
 
 (secretary/defroute "/" []
-  (reset! page #'home-page))
+                    (reset! page #'home-page))
 
 (secretary/defroute "/about" []
-  (reset! page #'about-page))
+                    (reset! page #'about-page))
 
 ;; -------------------------
 ;; Initialize app
@@ -80,11 +82,11 @@
 
 (defn init! []
   (accountant/configure-navigation!
-    {:nav-handler
-     (fn [path]
-       (secretary/dispatch! path))
-     :path-exists?
-     (fn [path]
-       (secretary/locate-route path))})
+   {:nav-handler
+    (fn [path]
+      (secretary/dispatch! path))
+    :path-exists?
+    (fn [path]
+      (secretary/locate-route path))})
   (accountant/dispatch-current!)
   (mount-root))

@@ -28,6 +28,37 @@ button {
 }
 
 .button-green {
-  background-color: teal;
+  background-color: burlywood;
   color: white;
+}
+
+.board {
+  background-color: #eee;
+  padding: 1rem;
+}
+
+.column {
+  background-color: powderblue;
+  display: inline-block;
+  margin: 2rem;
+  padding: 2rem;
+}
+
+.card {
+  background-color: white;
+  display: block;
+  margin: 1rem 0;
+  padding: 1rem;
+}
+
+.new-card, .new-column {
+  background-color: mistyrose;
+  display: block;
+  margin: 1rem 0;
+  padding: 1rem;
+}
+
+.new-column {
+  color: white;
+  background-color: cadetblue;
 }

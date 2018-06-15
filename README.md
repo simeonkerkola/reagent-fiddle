@@ -1,7 +1,7 @@
 # 🦃 Clojuresript and reagent fiddle-doodle
 
 ## Fire up in terminal
-``$ lein sass4clj auto``
+``$ lein figwheel``
 
 ## On the other window fire up
-``$ lein figwheel``
+``$ lein sass4clj auto``
