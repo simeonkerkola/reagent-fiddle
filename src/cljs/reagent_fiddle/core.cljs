@@ -1,51 +1,77 @@
 (ns reagent-fiddle.core
-  (:require [reagent.core :as r :refer [atom]]
+  (:require [reagent.core :as r]
             [secretary.core :as secretary :include-macros true]
             [accountant.core :as accountant]
-            [cljsjs.react-motion]))
+            [cljsjs.react-motion]
+            [reagent-fiddle.fiddle]))
 
 (def state (r/atom {:columns [{:title "Todos"
-                               :cards [{:title "Learn about Reagent"}
-                                       {:title "Go to sleep"}]
-                               :editing true}
-                              {:title "Fixes"
-                               :cards [{:title "Fix dinner"}
-                                       {:title "The Bike"
-                                        :editing true}]}]}))
+                               :cards [{:text "Learn about Reagent"}
+                                       {:text "Go to sleep"}]}
+                              {:title "Buy"
+                               :cards [{:text "Groceries"}
+                                       {:text "What ever"}]}]}))
 
-(defn card [card]
-   (if (:editing card)
-    ; If editing, show input field
-    [:div.card.editing [:input {:type "text" :value (:title card)}]]
-    [:div.card (:title card)]))
+(defn- update-text [card-cur text]
+  (swap! card-cur assoc :text text)
+  (println text))
+
+
+(defn- stop-editing [card-cur]
+  (swap! card-cur dissoc :editing)
+  (println "New state is:" @state))
+
+(defn- start-editing [card-cur]
+  (swap! card-cur assoc :editing true))
+
+(defn card [card-cur]
+  (let [{:keys [editing text]} @card-cur]
+    (if editing
+      ; If editing, show input field
+      [:div.card.editing [:input {:type "text"
+                                  :value text
+                                  :autoFocus true
+                                  :on-change #(update-text card-cur (.. % -target -value))
+                                  ; When the text field is not selected anymore
+                                  :on-blur #(stop-editing card-cur)
+                                  ; When hit enter, stop editing
+                                  :on-key-press #(if (= (.-charCode %) 13)
+                                                   (stop-editing card-cur))}]]
+      [:div.card {:on-click #(start-editing card-cur)} text])))
 
 (defn new-card []
   [:div.new-card
    "+ a new card"])
 
-(defn column [{:keys [title cards editing]}]
-  [:div.column
-   (if editing
-     ; If editing, show input field
-     [:input {:type "text" :value title}]
-     [:h2 title])
+(defn column [col-cur]
+  (let [{:keys [title cards editing]} @col-cur]
+    [:div.column
+     (if editing
+       ; If editing, show input field
+       [:input {:type "text" :value title}]
+       [:h2 title])
 
-   ; Get each individual card
-   (for [c cards]
-     ^{:key c} [card c])
-   [new-card]])
+      ; Get each individual card
+     (for [i (range (count cards))]
+       ; Creating a cursor based on another cursor, the path of the new cursor
+       ; is now relative to the path of the old one
+       ^{:key i} [card (r/cursor col-cur [:cards i])])
+     [new-card]]))
 
 (defn new-column []
   [:div.new-column
    "+ new column"])
 
-(defn board [state]
+(defn board [board]
   [:div.board
 
-   ; Loop thru columns from the state, and make a component for each
-   (for [c (:columns @state)]
-     ^{:key c} [column c])
+   (for [i (range (count (:columns @board)))]
+     ^{:key i} [column (r/cursor board [:columns i])])
    [new-column]])
+   ; ; Loop thru columns from the state, and make a component for each
+   ; (for [c (:columns @state)]
+   ;   ^{:key c} [column c])
+   ; [new-column]))
 
 ;; -------------------------
 ;; Views
