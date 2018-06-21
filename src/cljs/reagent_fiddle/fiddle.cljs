@@ -8,7 +8,7 @@
   (r/cursor board [:columns 0 :cards]))
 
 ; Adds a new card to the board
-(swap! cards-cursor conj {:text "New card ja haistakaa vittu!"})
+(swap! cards-cursor conj {:text "New card"})
 
 ; Any extra arguments to swap! are passed through as
 ; extra arguments to the function, so..

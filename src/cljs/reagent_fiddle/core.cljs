@@ -5,17 +5,22 @@
             [cljsjs.react-motion]
             [reagent-fiddle.fiddle]))
 
-(def state (r/atom {:columns [{:title "Todos"
-                               :cards [{:text "Learn about Reagent"}
-                                       {:text "Go to sleep"}]}
-                              {:title "Buy"
-                               :cards [{:text "Groceries"}
-                                       {:text "What ever"}]}]}))
+(def state (r/atom {:columns [{:id (random-uuid)
+                               :title "Todos"
+                               :cards [{:id (random-uuid)
+                                        :text "Learn about Reagent"}
+                                       {:id (random-uuid)
+                                        :text "Go to sleep"}]}
+                              {:id (random-uuid)
+                               :title "Buy"
+                               :cards [{:id (random-uuid)
+                                        :text "Groceries"}
+                                       {:id (random-uuid)
+                                        :text "What ever"}]}]}))
 
 (defn- update-text [card-cur text]
   (swap! card-cur assoc :text text)
   (println text))
-
 
 (defn- stop-editing [card-cur]
   (swap! card-cur dissoc :editing)
@@ -52,10 +57,12 @@
        [:h2 title])
 
       ; Get each individual card
-     (for [i (range (count cards))]
-       ; Creating a cursor based on another cursor, the path of the new cursor
-       ; is now relative to the path of the old one
-       ^{:key i} [card (r/cursor col-cur [:cards i])])
+     (map-indexed (fn [idx {id :id}]
+                    ; Creating a cursor based on another cursor, the path of the new cursor
+                    ; is now relative to the path of the old one
+                    (let [card-cur (r/cursor col-cur [:cards idx])]
+                      ^{:key id} [card card-cur]))
+                  cards)
      [new-card]]))
 
 (defn new-column []
@@ -64,9 +71,10 @@
 
 (defn board [board]
   [:div.board
-
-   (for [i (range (count (:columns @board)))]
-     ^{:key i} [column (r/cursor board [:columns i])])
+   (map-indexed (fn [idx {id :id}]
+                  (let [col-cur (r/cursor board [:columns idx])]
+                    ^{:key id} [column col-cur]))
+                (:columns @board))
    [new-column]])
    ; ; Loop thru columns from the state, and make a component for each
    ; (for [c (:columns @state)]
